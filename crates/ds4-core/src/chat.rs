@@ -2,13 +2,15 @@
 //! `ds4_chat_begin`, `ds4_chat_append_*` from `ds4.c`. The DS4 chat template
 //! is fixed:
 //!
-//!     [bos]
-//!     [reasoning-effort-max-prefix?]
-//!     [system text]
-//!     [user-role]
-//!     [user prompt]
-//!     [assistant-role]
-//!     [<think>] or [</think>]
+//! ```text
+//! [bos]
+//! [reasoning-effort-max-prefix?]
+//! [system text]
+//! [user-role]
+//! [user prompt]
+//! [assistant-role]
+//! [<think>] or [</think>]
+//! ```
 //!
 //! For ThinkMode::Max we prepend the long max-effort instructions; for
 //! High we open with `<think>`; for None we close with `</think>` so the
