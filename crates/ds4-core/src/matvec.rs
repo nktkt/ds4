@@ -41,6 +41,62 @@ pub fn matvec_f32(out: &mut [f32], w: &[f32], x: &[f32]) {
     }
 }
 
+/// Block layout for a `Q8_0` *weight* block: 2 bytes of f16 scale + 32 bytes of
+/// signed int8 quants. Mirrors the `[f16 d][i8 qs * 32]` row striding used
+/// inside `dot_q8_0_row`.
+pub const Q8_0_BLOCK_BYTES: usize = 34;
+
+/// Plain int8 dot product over up to 32 lanes. Mirrors `dot_i8_32`.
+#[inline]
+pub fn dot_i8_n(qs: &[i8], xq: &[i8], n: usize) -> i32 {
+    let mut acc = 0i32;
+    for i in 0..n { acc += qs[i] as i32 * xq[i] as i32; }
+    acc
+}
+
+/// Row dot product against a Q8_0 weight row laid out as
+/// `[[f16 d_b][i8 q_b * 32]] * blocks`. Returns the f32 dot product.
+/// Ports the scalar fallback of `dot_q8_0_row` from `ds4.c`.
+pub fn dot_q8_0_row(row: &[u8], xq: &[i8], xscale: &[f32], in_dim: usize) -> f32 {
+    let blocks = (in_dim + 31) / 32;
+    debug_assert!(row.len() >= blocks * Q8_0_BLOCK_BYTES);
+    let mut acc = 0.0f32;
+    for b in 0..blocks {
+        let base = b * Q8_0_BLOCK_BYTES;
+        let scale_bits = u16::from_le_bytes([row[base], row[base + 1]]);
+        let qs_start = base + 2;
+        let qs = unsafe {
+            // SAFETY: u8 and i8 have the same layout; the slice was bounds-checked above.
+            std::slice::from_raw_parts(row[qs_start..].as_ptr() as *const i8, 32)
+        };
+        let i0 = b * 32;
+        let n = if in_dim - i0 < 32 { in_dim - i0 } else { 32 };
+        acc += crate::half::f16_to_f32(scale_bits) * xscale[b] * dot_i8_n(qs, &xq[i0..i0 + n], n) as f32;
+    }
+    acc
+}
+
+/// `out = W @ x` for `Q8_0` weights with row stride `Q8_0_BLOCK_BYTES * blocks`.
+/// Quantizes the activation in one pass (matches the C path's
+/// `quantize_q8_0_activation_batch` + `matvec_q8_0_worker` flow).
+pub fn matvec_q8_0(out: &mut [f32], w: &[u8], x: &[f32]) {
+    let in_dim = x.len();
+    let blocks = (in_dim + 31) / 32;
+    let row_bytes = blocks * Q8_0_BLOCK_BYTES;
+    assert_eq!(w.len(), out.len() * row_bytes);
+    let mut xq = vec![0i8; blocks * 32];
+    let mut xscale = vec![0.0_f32; blocks];
+    let mut tail = vec![0.0_f32; blocks * 32 - in_dim];
+    let _ = &mut tail;
+    quantize_q8_0_activation(
+        &{ let mut v = x.to_vec(); v.resize(blocks * 32, 0.0); v },
+        &mut xq, &mut xscale,
+    );
+    for r in 0..out.len() {
+        out[r] = dot_q8_0_row(&w[r * row_bytes..(r + 1) * row_bytes], &xq, &xscale, in_dim);
+    }
+}
+
 /// Quantize an activation vector to Q8_0: 32-element blocks, each holding an
 /// f32 scale and 32 int8 values. Mirrors `quantize_q8_0_activation`.
 pub fn quantize_q8_0_activation(x: &[f32], xq: &mut [i8], scale: &mut [f32]) {
@@ -77,6 +133,22 @@ mod tests {
         let mut out = vec![0.0_f32; 3];
         matvec_f16(&mut out, &w, &x);
         for i in 0..3 { assert!((out[i] - x[i]).abs() < 1e-3); }
+    }
+
+    #[test]
+    fn dot_q8_0_row_identity_like() {
+        // Build a single Q8_0 block with scale 1.0 and qs = [1, 1, ..., 1].
+        // Then dot it against an int8 activation of all 1s (also scale 1.0).
+        // Result should be 32.
+        let mut row = vec![0u8; Q8_0_BLOCK_BYTES];
+        let scale = crate::half::f32_to_f16(1.0).to_le_bytes();
+        row[0] = scale[0];
+        row[1] = scale[1];
+        for i in 0..32 { row[2 + i] = 1u8; } // i8 = 1
+        let xq = vec![1i8; 32];
+        let xscale = vec![1.0_f32; 1];
+        let v = dot_q8_0_row(&row, &xq, &xscale, 32);
+        assert!((v - 32.0).abs() < 1e-3, "got {v}");
     }
 
     #[test]
