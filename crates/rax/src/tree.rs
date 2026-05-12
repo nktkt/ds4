@@ -423,7 +423,8 @@ pub struct Iter<'a, V> {
     started: bool,
     key: Vec<u8>,
     eof: bool,
-    pending_first: Option<*const V>,  // used to deliver a node value before descending
+    #[allow(dead_code)]
+    pending_first: Option<*const V>,  // reserved for future seek implementations
 }
 
 struct Frame<'a, V> {

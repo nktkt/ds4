@@ -11,6 +11,7 @@ use std::path::Path;
 pub struct MetalRuntime {
     // TODO: hold Retained<ProtocolObject<dyn MTLDevice>> / MTLCommandQueue /
     // MTLLibrary once the objc2-metal API is wired up.
+    #[allow(dead_code)]
     pub(crate) metallib_path: std::path::PathBuf,
 }
 

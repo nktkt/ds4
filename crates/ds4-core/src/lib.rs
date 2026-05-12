@@ -30,6 +30,7 @@ pub mod sampler;    // top_k / top_p / min_p / temperature sampling
 pub mod kv_cache;   // session KV cache and disk payload serialization
 pub mod session;    // ds4_session_*
 pub mod engine;     // ds4_engine_*
+pub mod chat;       // ds4_chat_* / ds4_encode_chat_prompt
 pub mod backend;    // backend dispatch (metal / cuda / cpu)
 pub mod think;      // think-mode helpers
 pub mod context_memory; // ds4_context_memory_estimate

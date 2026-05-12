@@ -6,9 +6,9 @@
 //! state on top.
 
 use crate::api::{
-    Backend, Tokens, ThinkMode, EngineOptions, TokenSink, ProgressSink,
+    Backend, Tokens, EngineOptions, TokenSink, ProgressSink,
 };
-use crate::backend::{self, BackendImpl};
+use crate::backend;
 use crate::gguf::Gguf;
 use crate::model::{Config, Tensors};
 use crate::session::Session;
@@ -17,13 +17,20 @@ use anyhow::{anyhow, Result};
 use std::sync::Arc;
 
 pub struct Engine {
+    #[allow(dead_code)]
     pub(crate) gguf: Arc<Gguf>,
     pub(crate) config: Config,
     pub(crate) tokenizer: Tokenizer,
     pub(crate) backend: Backend,
+    #[allow(dead_code)]
     pub(crate) mtp: Option<Arc<Gguf>>,
     pub(crate) mtp_draft_tokens: i32,
     pub(crate) routed_quant_bits: i32,
+}
+
+impl Engine {
+    /// Borrow the underlying GGUF mmap. Used by debug tooling.
+    pub fn gguf(&self) -> &Gguf { &self.gguf }
 }
 
 impl Engine {
