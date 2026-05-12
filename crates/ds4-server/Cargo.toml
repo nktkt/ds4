@@ -25,6 +25,7 @@ env_logger = { workspace = true }
 serde      = { workspace = true }
 serde_json = { workspace = true }
 tokio      = { workspace = true }
+tokio-stream = "0.1"
 hyper      = { workspace = true }
 hyper-util = { workspace = true }
 http-body-util = { workspace = true }
