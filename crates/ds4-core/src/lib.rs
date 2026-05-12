@@ -22,9 +22,15 @@ pub mod half;       // f16 <-> f32 + E4M3FN dequant
 pub mod nn;         // RMSNorm, SwiGLU, softmax, SiLU
 pub mod rope;       // YaRN-style rotary position embedding
 pub mod matvec;     // f16 / Q8_0 / Q2_K matrix-vector multiplies
+pub mod matvec_q;   // Q2_K / Q4_K / IQ2_XXS row dots + matvecs
 pub mod dequant;    // dequant of Q2_K, Q4_K, IQ2_XXS, Q8_K blocks
 pub mod layer;      // per-layer parameters (compression ratio)
 pub mod shape;      // fixed DeepSeek V4 Flash shape constants
+pub mod hc;         // hyper-connection helpers (split, post, weighted-sum)
+pub mod attn;       // MLA attention CPU reference
+pub mod moe;        // MoE routing (sinkhorn, top-k, expert dispatch)
+pub mod ffn;        // shared-expert SwiGLU FFN + layer_ffn_one
+pub mod output_head; // HC collapse + final RMSNorm + vocab projection
 pub mod model;      // tensor metadata, weights, model config
 pub mod sampler;    // top_k / top_p / min_p / temperature sampling
 pub mod kv_cache;   // session KV cache and disk payload serialization

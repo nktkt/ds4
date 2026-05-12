@@ -8,8 +8,10 @@ pub mod queue;
 pub mod stream;
 pub mod stop;
 pub mod tools;
+pub mod tool_parser;
 pub mod openai;
 pub mod anthropic;
+pub mod anthropic_messages;
 pub mod disk_cache;
 
 use args::ServerArgs;

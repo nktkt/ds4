@@ -17,3 +17,26 @@ parking_lot = { workspace = true }
 log         = { workspace = true }
 once_cell   = { workspace = true }
 ahash       = { workspace = true }
+
+# macOS-only Objective-C / Metal bindings.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2            = { workspace = true }
+objc2-foundation = { workspace = true, features = [
+    "NSString",
+    "NSURL",
+    "NSError",
+] }
+objc2-metal      = { workspace = true, features = [
+    "MTLDevice",
+    "MTLCommandQueue",
+    "MTLCommandBuffer",
+    "MTLCommandEncoder",
+    "MTLComputeCommandEncoder",
+    "MTLComputePipeline",
+    "MTLLibrary",
+    "MTLBuffer",
+    "MTLResource",
+    "MTLTypes",
+    "MTLPipeline",
+] }
+block2           = { workspace = true }
