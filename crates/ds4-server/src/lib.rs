@@ -6,6 +6,7 @@ pub mod args;
 pub mod http;
 pub mod queue;
 pub mod stream;
+pub mod stop;
 pub mod tools;
 pub mod openai;
 pub mod anthropic;

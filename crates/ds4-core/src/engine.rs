@@ -112,35 +112,81 @@ impl Engine {
 
 fn build_tokenizer(g: &Gguf) -> Result<Tokenizer> {
     use crate::gguf::Value;
-    let vocab = match g.metadata.get("tokenizer.ggml.tokens") {
+    let vocab: Vec<Vec<u8>> = match g.metadata.get("tokenizer.ggml.tokens") {
         Some(Value::Array(arr)) => arr.iter()
             .map(|v| match v {
                 Value::String(s) => s.as_bytes().to_vec(),
                 _ => Vec::new(),
-            }).collect::<Vec<_>>(),
+            }).collect(),
         _ => return Err(anyhow!("tokenizer: no tokens array in gguf")),
     };
     let mut by_bytes = ahash::AHashMap::with_capacity(vocab.len());
     for (i, b) in vocab.iter().enumerate() {
         by_bytes.insert(b.clone(), i as i32);
     }
-    let lookup = |k: &str| -> i32 {
+    // Merges: "<a> <b>" → rank index. Mirrors `vocab_load` (ds4.c).
+    let mut merges: ahash::AHashMap<(Vec<u8>, Vec<u8>), i32> = ahash::AHashMap::new();
+    if let Some(Value::Array(arr)) = g.metadata.get("tokenizer.ggml.merges") {
+        for (rank, v) in arr.iter().enumerate() {
+            if let Value::String(s) = v {
+                if let Some(sp) = s.find(' ') {
+                    let a = s[..sp].as_bytes().to_vec();
+                    let b = s[sp + 1..].as_bytes().to_vec();
+                    merges.insert((a, b), rank as i32);
+                }
+            }
+        }
+    }
+    // Resolve DS4 special tokens by name. Names taken verbatim from
+    // `vocab_load` in ds4.c. Compute everything *before* moving by_bytes
+    // into the struct so the borrow checker stays happy.
+    let lookup_str = |s: &str| -> i32 {
+        by_bytes.get(s.as_bytes()).copied().unwrap_or(-1)
+    };
+    let lookup_meta = |k: &str| -> i32 {
         g.meta_u32(k).map(|v| v as i32).unwrap_or(-1)
     };
+    let names = [
+        "<\u{ff5c}begin\u{2581}of\u{2581}sentence\u{ff5c}>",
+        "<\u{ff5c}end\u{2581}of\u{2581}sentence\u{ff5c}>",
+        "<\u{ff5c}User\u{ff5c}>",
+        "<\u{ff5c}Assistant\u{ff5c}>",
+        "<think>",
+        "</think>",
+        "\u{ff5c}DSML\u{ff5c}",
+        "<|im_start|>",
+        "<|im_end|>",
+    ];
+    let mut special: indexmap::IndexMap<String, i32> = indexmap::IndexMap::new();
+    for name in names {
+        let id = lookup_str(name);
+        if id >= 0 { special.insert(name.to_string(), id); }
+    }
+    let bos_named = lookup_str(names[0]);
+    let eos_named = lookup_str(names[1]);
+    let user_role = lookup_str(names[2]);
+    let assistant_role = lookup_str(names[3]);
+    let think_start = lookup_str(names[4]);
+    let think_end   = lookup_str(names[5]);
+    let im_start    = lookup_str(names[7]);
+    let im_end      = lookup_str(names[8]);
+    let bos_meta = lookup_meta("tokenizer.ggml.bos_token_id");
+    let eos_meta = lookup_meta("tokenizer.ggml.eos_token_id");
+
     Ok(Tokenizer {
         vocab,
         vocab_by_bytes: by_bytes,
-        special: indexmap::IndexMap::new(),
-        merges: ahash::AHashMap::new(),
-        bos: lookup("tokenizer.ggml.bos_token_id"),
-        eos: lookup("tokenizer.ggml.eos_token_id"),
-        im_start: lookup("tokenizer.ggml.im_start_token_id"),
-        im_end:   lookup("tokenizer.ggml.im_end_token_id"),
-        user_role: -1,
-        assistant_role: -1,
+        special,
+        merges,
+        bos: if bos_named >= 0 { bos_named } else { bos_meta },
+        eos: if eos_named >= 0 { eos_named } else { eos_meta },
+        im_start,
+        im_end,
+        user_role,
+        assistant_role,
         system_role: -1,
-        think_start: -1,
-        think_end: -1,
+        think_start,
+        think_end,
     })
 }
 
