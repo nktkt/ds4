@@ -1,0 +1,24 @@
+[package]
+name = "ds4-cuda"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CUDA backend for DwarfStar 4 (Linux + NVIDIA)."
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+anyhow      = { workspace = true }
+thiserror   = { workspace = true }
+bytemuck    = { workspace = true }
+half        = { workspace = true }
+parking_lot = { workspace = true }
+log         = { workspace = true }
+once_cell   = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+cudarc      = { workspace = true }
+
+[build-dependencies]
+# build.rs invokes nvcc to compile .cu kernel files when CUDA_HOME is set.

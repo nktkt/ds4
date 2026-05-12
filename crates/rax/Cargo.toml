@@ -1,0 +1,11 @@
+[package]
+name = "rax"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Radix tree (port of antirez rax.c) — used by the ds4 HTTP server for tool-call routing."
+
+[dependencies]
+
+[dev-dependencies]
+rand = { workspace = true }

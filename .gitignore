@@ -1,0 +1,8 @@
+/target
+**/*.rs.bk
+Cargo.lock.bak
+/ds4flash.gguf
+/gguf/
+/misc/
+.DS_Store
+*.swp

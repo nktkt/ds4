@@ -1,0 +1,32 @@
+//! ds4-core — model loading, tokenizer, sessions, backend dispatch.
+//!
+//! Public surface mirrors `ds4.h`: an opaque [`Engine`], an opaque [`Session`],
+//! plus the supporting enums and option structs. Lifetimes here lean on Rust's
+//! borrow checker instead of the C `ds4_engine_close` / `ds4_session_free`
+//! handle dance — engines and sessions clean themselves up on drop.
+//!
+//! The actual inference graph implementation (which lives in the ~17k-line
+//! `ds4.c`) is being ported incrementally into the modules below. Each
+//! submodule annotates which range of the C source it corresponds to so the
+//! port can be cross-checked.
+
+pub mod api;        // public types analogous to ds4.h
+pub mod log;        // ds4_log + ds4_log_is_tty
+pub mod tokens;     // ds4_tokens helpers
+pub mod tokenizer;  // BPE tokenizer + chat templating
+pub mod gguf;       // GGUF mmap loader
+pub mod model;      // tensor metadata, weights, model config
+pub mod sampler;    // top_k / top_p / min_p / temperature sampling
+pub mod kv_cache;   // session KV cache and disk payload serialization
+pub mod session;    // ds4_session_*
+pub mod engine;     // ds4_engine_*
+pub mod backend;    // backend dispatch (metal / cuda / cpu)
+pub mod think;      // think-mode helpers
+pub mod context_memory; // ds4_context_memory_estimate
+
+pub use api::{
+    Backend, ThinkMode, LogType, EngineOptions, ContextMemory, SessionSnapshot,
+    TokenScore, SessionRewriteResult, Tokens,
+};
+pub use engine::Engine;
+pub use session::Session;

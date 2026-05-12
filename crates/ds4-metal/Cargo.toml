@@ -1,0 +1,19 @@
+[package]
+name = "ds4-metal"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Metal backend for DwarfStar 4 (macOS only)."
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+anyhow      = { workspace = true }
+thiserror   = { workspace = true }
+bytemuck    = { workspace = true }
+half        = { workspace = true }
+parking_lot = { workspace = true }
+log         = { workspace = true }
+once_cell   = { workspace = true }
+ahash       = { workspace = true }

@@ -1,0 +1,25 @@
+[package]
+name = "ds4-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "DwarfStar 4 interactive CLI."
+
+[[bin]]
+name = "ds4"
+path = "src/main.rs"
+
+[features]
+default = []
+metal = ["ds4-core/metal"]
+cuda  = ["ds4-core/cuda"]
+cpu   = ["ds4-core/cpu"]
+
+[dependencies]
+ds4-core   = { workspace = true }
+anyhow     = { workspace = true }
+clap       = { workspace = true }
+rustyline  = { workspace = true }
+log        = { workspace = true }
+env_logger = { workspace = true }
+serde_json = { workspace = true }

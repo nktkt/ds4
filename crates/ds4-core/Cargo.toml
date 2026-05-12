@@ -1,0 +1,36 @@
+[package]
+name = "ds4-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "DeepSeek V4 Flash inference engine core: model loading, tokenizer, sessions, backend dispatch."
+
+[features]
+default = []
+metal = ["dep:ds4-metal"]
+cuda  = ["dep:ds4-cuda"]
+cpu   = []
+
+[dependencies]
+anyhow           = { workspace = true }
+thiserror        = { workspace = true }
+bytemuck         = { workspace = true }
+half             = { workspace = true }
+memmap2          = { workspace = true }
+parking_lot      = { workspace = true }
+crossbeam        = { workspace = true }
+crossbeam-channel = { workspace = true }
+rayon            = { workspace = true }
+log              = { workspace = true }
+serde            = { workspace = true }
+serde_json       = { workspace = true }
+ahash            = { workspace = true }
+smallvec         = { workspace = true }
+once_cell        = { workspace = true }
+libc             = { workspace = true }
+rand             = { workspace = true }
+rand_xoshiro     = { workspace = true }
+indexmap         = { workspace = true }
+
+ds4-metal        = { workspace = true, optional = true }
+ds4-cuda         = { workspace = true, optional = true }
