@@ -13,6 +13,8 @@ pub mod kernels;
 pub mod graph;
 #[cfg(target_os = "macos")]
 pub mod buffers;
+#[cfg(target_os = "macos")]
+pub mod encoder;
 
 #[cfg(not(target_os = "macos"))]
 mod stub {

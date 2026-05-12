@@ -12,7 +12,10 @@ pub mod tool_parser;
 pub mod openai;
 pub mod anthropic;
 pub mod anthropic_messages;
+pub mod anthropic_stream;
+pub mod endpoints;
 pub mod disk_cache;
+pub mod disk_cache_index;
 
 use args::ServerArgs;
 

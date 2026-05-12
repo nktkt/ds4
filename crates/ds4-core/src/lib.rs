@@ -31,6 +31,9 @@ pub mod attn;       // MLA attention CPU reference
 pub mod moe;        // MoE routing (sinkhorn, top-k, expert dispatch)
 pub mod ffn;        // shared-expert SwiGLU FFN + layer_ffn_one
 pub mod output_head; // HC collapse + final RMSNorm + vocab projection
+pub mod layer_forward; // full per-layer composition (attn + MoE + FFN + HC)
+pub mod weights;    // GGUF tensor binder → per-layer typed slices
+pub mod cpu_generate; // end-to-end CPU prefill + decode loop
 pub mod model;      // tensor metadata, weights, model config
 pub mod sampler;    // top_k / top_p / min_p / temperature sampling
 pub mod kv_cache;   // session KV cache and disk payload serialization

@@ -10,6 +10,8 @@ pub mod runtime;
 pub mod kernels;
 #[cfg(target_os = "linux")]
 pub mod graph;
+#[cfg(target_os = "linux")]
+pub mod launch;
 
 #[cfg(not(target_os = "linux"))]
 mod stub {
