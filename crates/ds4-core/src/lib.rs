@@ -15,6 +15,16 @@ pub mod log;        // ds4_log + ds4_log_is_tty
 pub mod tokens;     // ds4_tokens helpers
 pub mod tokenizer;  // BPE tokenizer + chat templating
 pub mod gguf;       // GGUF mmap loader
+pub mod quant;      // GGUF quant block layouts (Q2_K, Q4_K, IQ2_XXS, Q8_K)
+pub mod iq2_tables; // IQ2_XXS lookup tables
+pub mod dot;        // inner-loop integer dot helpers
+pub mod half;       // f16 <-> f32 + E4M3FN dequant
+pub mod nn;         // RMSNorm, SwiGLU, softmax, SiLU
+pub mod rope;       // YaRN-style rotary position embedding
+pub mod matvec;     // f16 / Q8_0 / Q2_K matrix-vector multiplies
+pub mod dequant;    // dequant of Q2_K, Q4_K, IQ2_XXS, Q8_K blocks
+pub mod layer;      // per-layer parameters (compression ratio)
+pub mod shape;      // fixed DeepSeek V4 Flash shape constants
 pub mod model;      // tensor metadata, weights, model config
 pub mod sampler;    // top_k / top_p / min_p / temperature sampling
 pub mod kv_cache;   // session KV cache and disk payload serialization
