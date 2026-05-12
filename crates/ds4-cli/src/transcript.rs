@@ -28,25 +28,20 @@ impl Transcript {
         self.turns.push(Turn { role: "assistant".into(), content: content.into() });
     }
     pub fn render(&self, engine: &Engine, think: ThinkMode, out: &mut Tokens) {
-        // Round-trip through the rendered chat path. Matches
-        // `ds4_encode_chat_prompt` / `ds4_chat_append_*` from the C side.
-        let mut rendered = String::new();
+        // Use the same template `ds4.c::encode_chat_prompt` uses, via the
+        // ported helpers in ds4_core::chat. Walking the transcript turn-by-turn
+        // keeps multi-turn KV-cache reuse working: prefix-sharing depends on
+        // the token sequence not the rendered string.
+        ds4_core::chat::begin(engine, out);
+        if matches!(think, ThinkMode::Max) {
+            ds4_core::chat::append_max_effort_prefix(engine, out);
+        }
         if let Some(sys) = &self.system {
-            rendered.push_str("<|im_start|>system\n");
-            rendered.push_str(sys);
-            rendered.push_str("<|im_end|>\n");
+            engine.tokenizer().encode(sys, out);
         }
         for t in &self.turns {
-            rendered.push_str("<|im_start|>");
-            rendered.push_str(&t.role);
-            rendered.push('\n');
-            rendered.push_str(&t.content);
-            rendered.push_str("<|im_end|>\n");
+            ds4_core::chat::append_message(engine, out, &t.role, &t.content);
         }
-        rendered.push_str("<|im_start|>assistant\n");
-        if matches!(think, ThinkMode::Max) {
-            rendered.push_str(ThinkMode::max_prefix());
-        }
-        engine.tokenizer().encode_rendered_chat(&rendered, out);
+        ds4_core::chat::append_assistant_prefix(engine, out, think);
     }
 }
