@@ -28,6 +28,7 @@ pub mod shape;      // fixed DeepSeek V4 Flash shape constants
 pub mod model;      // tensor metadata, weights, model config
 pub mod sampler;    // top_k / top_p / min_p / temperature sampling
 pub mod kv_cache;   // session KV cache and disk payload serialization
+pub mod forward;    // CPU reference forward pass scaffold
 pub mod session;    // ds4_session_*
 pub mod engine;     // ds4_engine_*
 pub mod chat;       // ds4_chat_* / ds4_encode_chat_prompt
